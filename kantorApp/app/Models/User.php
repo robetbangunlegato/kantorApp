@@ -12,7 +12,6 @@ use Illuminate\Contracts\Auth\CanResetPassword;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -50,6 +49,10 @@ class User extends Authenticatable
     public function setPasswordAttribute($password)
     {
         $this->attributes['password'] = bcrypt($password);
+    }
+
+    public function absensis(){
+        return $this->hasMany(Absensi::class);
     }
 
 }

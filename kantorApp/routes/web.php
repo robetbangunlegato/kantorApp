@@ -73,4 +73,5 @@ Route::group(['middleware' => 'auth'], function () {
 	})->name('user-profile');
 	Route::resource('absensi', AbsensiController::class);
 	Route::resource('pengaturanabsensi', PengaturanAbsensiController::class);
+	Route::post('/absensi/filter', [AbsensiController::class, 'filter'])->name('absensi.filter');
 });

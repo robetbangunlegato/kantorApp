@@ -13,20 +13,75 @@ class AbsensiController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        //mengambil waktu sekarang
-        $waktu_sekarang = carbon::now();
-        
-        // ambil informasi waktu_buka dan waktu_tutup dari tabel pengaturan_absensis langsung konversi ke laravel carbon
-        $pengaturan_absensis = PengaturanAbsensi::all();
-        $waktu_buka = Carbon::parse($pengaturan_absensis[0]->waktu_buka);
-        $waktu_tutup = Carbon::parse($pengaturan_absensis[0]->waktu_tutup);
+    public function index(Request $request)
+{
+    // Logika Filter
+   if ($request->ajax()) {
+    $filterType = $request->input('filter'); // hari, bulan, atau tahun
+    $filterValue = $request->input('value'); // nilai filter
 
-        // 
-        $hasil_cek_waktu = $waktu_sekarang->between($waktu_buka, $waktu_tutup);  // akan menghasilkan nilai 'true' atau 'false'
-        return view('Absensi.index', compact('hasil_cek_waktu'));
+    $query = Absensi::query();
+
+    // Terapkan filter berdasarkan parameter
+    if ($filterType === 'hari' && $filterValue) {
+        $query->whereDate('created_at', $filterValue);
+    } elseif ($filterType === 'bulan' && $filterValue) {
+        $query->whereMonth('created_at', Carbon::parse($filterValue)->month)
+              ->whereYear('created_at', Carbon::parse($filterValue)->year);
+    } elseif ($filterType === 'tahun' && $filterValue) {
+        $query->whereYear('created_at', $filterValue);
     }
+
+    // Filter data sesuai peran pengguna
+    $pengguna_aktif = auth()->user();
+    if ($pengguna_aktif->role == 'pegawai') {
+        $query->where('user_id', $pengguna_aktif->id);
+    }
+
+    // Tambahkan eager loading untuk relasi `user`
+    $filteredData = $query->with('user')->get()->map(function ($item) {
+    return [
+        'id' => $item->id,
+        'user' => $item->user,
+        'created_at' => $item->created_at->format('d-m-Y H:i:s'), // Format tanggal
+        'status_absensi' => $item->status_absensi,
+    ];
+});
+
+    // Kembalikan respons JSON untuk AJAX
+    return response()->json(['data' => $filteredData]);
+}
+    // 1. SYARAT WAKTU
+    $waktu_sekarang = Carbon::now();
+    $pengaturan_absensis = PengaturanAbsensi::all();
+    $waktu_buka = Carbon::parse($pengaturan_absensis[0]->waktu_buka);
+    $waktu_tutup = Carbon::parse($pengaturan_absensis[0]->waktu_tutup);
+    $hasil_cek_waktu = $waktu_sekarang->between($waktu_buka, $waktu_tutup);
+
+    // 2. SYARAT ALAMAT IP
+    $ip_pengguna = $request->ip();
+    $hasil_cek_ip = PengaturanAbsensi::where('rentang_awal_IP', '<=', $ip_pengguna)
+                                     ->where('rentang_akhir_IP', '>=', $ip_pengguna)
+                                     ->exists();
+
+    // 3. SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI PADA HARI YANG SAMA
+    $hasil_cek_double_absensi = Absensi::where('user_id', auth()->id())
+                                       ->whereDate('created_at', Carbon::today())
+                                       ->exists();
+
+    // 4. MENGAMBIL DATA ABSENSI SESUAI PENGGUNA
+    $pengguna_aktif = auth()->user();
+    if ($pengguna_aktif->email == 'admin@material.com') {
+        $absensis = Absensi::all();
+    } else {
+        $absensis = $pengguna_aktif->absensis;
+    }
+
+    // 5. FITUR PENCARIAN (jika ada, tambahkan logika di sini)
+
+    return view('Absensi.index', compact('hasil_cek_waktu', 'hasil_cek_ip', 'hasil_cek_double_absensi', 'absensis'));
+}
+
 
     /**
      * Show the form for creating a new resource.
@@ -51,7 +106,10 @@ class AbsensiController extends Controller
             'status_absensi' => 'required'
         ]);
 
+        $ip_pengguna = auth()->id();
+
         $absensi = new Absensi();
+        $absensi->user_id = auth()->id();
         $absensi->status_absensi = $validasi['status_absensi'];
         $absensi->save();
 
