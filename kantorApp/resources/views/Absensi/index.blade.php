@@ -13,6 +13,12 @@
                 </div>
             @endif
             <div class="row">
+                <div class="col-12 p-0">
+                    <a href="{{ route('pengaturanabsensi.index') }}" class="btn btn-primary w-100">Pengaturan
+                        absensi</a>
+                </div>
+            </div>
+            <div class="row">
                 @if ($hasil_cek_waktu && $hasil_cek_ip)
                     @if ($hasil_cek_double_absensi === false)
                         <a href="{{ route('absensi.create') }}" class="btn btn-primary my-2 w-100"
@@ -48,7 +54,8 @@
                         Filter Tahun Ini
                     </button>
                 </div>
-                <div class="col-6">
+                <div class="col-6 d-flex justify-content-end">
+                    <a href="#" class="btn btn-success download-pdf">Unduh laporan</a>
 
                 </div>
             </div>
@@ -59,48 +66,48 @@
                             <table class="table align-items-center mb-0" id="absensi-table">
                                 <thead class="text-center">
                                     <tr>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
                                             No
                                         </th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
                                             Nama
                                         </th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
                                             Waktu absensi
                                         </th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
                                             Keterangan
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-center">
+                                <tbody class="text-center" style="">
                                     @php
                                         $no = 1;
                                     @endphp
                                     @forelse ($absensis as $absensi)
                                         <tr>
                                             <td>
-                                                <p class="text-xs font-weight-normal mb-0">{{ $no }}</p>
+                                                <p class="font-weight-normal mb-0">{{ $no }}</p>
                                                 @php
                                                     $no++;
                                                 @endphp
                                             </td>
                                             <td>
-                                                <p class="text-xs font-weight-normal mb-0">{{ $absensi->user->name }}
+                                                <p class="font-weight-normal mb-0">{{ $absensi->user->name }}
                                                 </p>
                                             </td>
                                             <td>
-                                                <p class="text-xs font-weight-normal mb-0">{{ $absensi->created_at }}
+                                                <p class="font-weight-normal mb-0">{{ $absensi->created_at }}
                                                 </p>
                                             </td>
                                             <td>
-                                                <p class="text-xs font-weight-normal mb-0">
+                                                <p class="font-weight-normal mb-0">
                                                     {{ $absensi->status_absensi }}</p>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-xs font-weight-normal">
+                                            <td colspan="4" class="font-weight-normal">
                                                 Tidak ada data absensi !
                                             </td>
                                         </tr>
@@ -145,44 +152,49 @@
         <script>
             $(document).ready(function() {
                 $("#pesan_sukses").delay(3000).fadeOut("slow");
+                let currentFilter = null;
+
                 $('.filter-btn').on('click', function() {
-                    const filter = $(this).data('filter'); // hari, bulan, atau tahun
-                    const value = $(this).data('value'); // Nilai filter
+                    const filter = $(this).data('filter');
+                    const value = $(this).data('value');
+
+                    // Simpan filter untuk digunakan saat unduh
+                    currentFilter = {
+                        filter,
+                        value
+                    };
 
                     $.ajax({
                         url: '/absensi',
                         type: 'GET',
                         data: {
-                            filter: filter,
-                            value: value
+                            filter,
+                            value
                         },
                         success: function(response) {
                             const tbody = $('#absensi-table tbody');
                             tbody.empty();
 
                             if (response.data.length > 0) {
-                                let no = 1; // Nomor urut
+                                let no = 1;
                                 response.data.forEach(item => {
-                                    // Gunakan moment.js untuk memformat created_at
                                     const formattedDate = moment(item.created_at).format(
                                         'DD-MM-YYYY HH:mm:ss');
                                     const userName = item.user ? item.user.name :
                                         'Nama tidak tersedia';
-                                    const row = `<tr>
-                            <td><p class="text-xs font-weight-normal mb-0">${no}</p></td>
-                            <td><p class="text-xs font-weight-normal mb-0">${userName}</p></td>
-                            <td><p class="text-xs font-weight-normal mb-0">${formattedDate}</p></td>
-                            <td><p class="text-xs font-weight-normal mb-0">${item.status_absensi}</p></td>
-                        </tr>`;
+                                    const row = `
+                            <tr>
+                                <td>${no}</td>
+                                <td>${userName}</td>
+                                <td>${formattedDate}</td>
+                                <td>${item.status_absensi}</td>
+                            </tr>`;
                                     tbody.append(row);
                                     no++;
                                 });
                             } else {
-                                tbody.append(`
-                        <tr>
-                            <td colspan="4" class="text-xs font-weight-normal">Tidak ada data absensi !</td>
-                        </tr>
-                    `);
+                                tbody.append(
+                                    '<tr><td colspan="4">Tidak ada data absensi!</td></tr>');
                             }
                         },
                         error: function(err) {
@@ -190,6 +202,17 @@
                         }
                     });
                 });
+
+                $('.download-pdf').on('click', function(e) {
+                    e.preventDefault();
+                    let url = "{{ route('absensi.download-pdf') }}";
+                    if (currentFilter) {
+                        url += `?filter=${currentFilter.filter}&value=${currentFilter.value}`;
+                    }
+                    window.location.href = url;
+                });
+
+
             })
         </script>
     </main>

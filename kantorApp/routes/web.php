@@ -74,4 +74,6 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::resource('absensi', AbsensiController::class);
 	Route::resource('pengaturanabsensi', PengaturanAbsensiController::class);
 	Route::post('/absensi/filter', [AbsensiController::class, 'filter'])->name('absensi.filter');
+	Route::get('download-pdf', [AbsensiController::class, 'downloadPDF'])->name('absensi.download-pdf');
+
 });

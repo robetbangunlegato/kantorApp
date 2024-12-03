@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\PengaturanAbsensi;
 use App\Models\Absensi;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class AbsensiController extends Controller
 {
     /**
@@ -13,12 +15,13 @@ class AbsensiController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
-{
+    public function index(Request $request){
+        
+       
     // Logika Filter
    if ($request->ajax()) {
-    $filterType = $request->input('filter'); // hari, bulan, atau tahun
-    $filterValue = $request->input('value'); // nilai filter
+        $filterType = $request->input('filter'); // hari, bulan, atau tahun
+        $filterValue = $request->input('value'); // nilai filter
 
     $query = Absensi::query();
 
@@ -78,7 +81,7 @@ class AbsensiController extends Controller
     }
 
     // 5. FITUR PENCARIAN (jika ada, tambahkan logika di sini)
-
+    
     return view('Absensi.index', compact('hasil_cek_waktu', 'hasil_cek_ip', 'hasil_cek_double_absensi', 'absensis'));
 }
 
@@ -160,4 +163,39 @@ class AbsensiController extends Controller
     {
         //
     }
+
+   
+
+public function downloadPDF(Request $request)
+{
+    $filterType = $request->input('filter'); // hari, bulan, atau tahun
+    $filterValue = $request->input('value'); // nilai filter
+
+    $query = Absensi::query();
+
+    if ($filterType === 'hari' && $filterValue) {
+        $query->whereDate('created_at', $filterValue);
+    } elseif ($filterType === 'bulan' && $filterValue) {
+        $query->whereMonth('created_at', Carbon::parse($filterValue)->month)
+              ->whereYear('created_at', Carbon::parse($filterValue)->year);
+    } elseif ($filterType === 'tahun' && $filterValue) {
+        $query->whereYear('created_at', $filterValue);
+    }
+
+    $penggunaAktif = auth()->user();
+    if ($penggunaAktif->email !== 'admin@material.com') {
+        $query->where('user_id', $penggunaAktif->id);
+    }
+
+    $absensis = $query->orderBy('created_at', 'desc')->get();
+
+    $pdf = Pdf::loadView('Absensi.laporan', compact('absensis'));
+    return $pdf->download('laporan_absensi.pdf');
 }
+
+
+
+
+}
+
+
