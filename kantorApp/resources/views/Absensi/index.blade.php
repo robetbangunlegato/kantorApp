@@ -12,33 +12,39 @@
                     </div>
                 </div>
             @endif
-            <div class="row">
-                <div class="col-12 p-0">
-                    <a href="{{ route('pengaturanabsensi.index') }}" class="btn btn-primary w-100">Pengaturan
-                        absensi</a>
+            @if (Auth()->user()->role == 'admin')
+                <div class="row">
+                    <div class="col-12 p-0">
+                        <a href="{{ route('pengaturanabsensi.index') }}" class="btn btn-primary w-100">Pengaturan
+                            absensi</a>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                @if ($hasil_cek_waktu && $hasil_cek_ip)
-                    @if ($hasil_cek_double_absensi === false)
-                        <a href="{{ route('absensi.create') }}" class="btn btn-primary my-2 w-100"
-                            data-bs-toggle="modal" data-bs-target="#modal_absensi">Absensi</a>
+            @endif
+
+            @if (Auth()->user()->role == 'pegawai')
+                <div class="row">
+                    @if ($hasil_cek_waktu && $hasil_cek_ip)
+                        @if ($hasil_cek_double_absensi === false)
+                            <a href="{{ route('absensi.create') }}" class="btn btn-primary mb-4 w-100"
+                                data-bs-toggle="modal" data-bs-target="#modal_absensi">Absensi</a>
+                        @else
+                            <a class="btn btn-secondary mt-2 mb-0 w-100"" disabled>Absensi</a>
+                            <p class="m-0"><small>Absensi tidak tersedia! anda sudah melakukan absensi hari
+                                    ini!</small>
+                            </p>
+                        @endif
                     @else
                         <a class="btn btn-secondary mt-2 mb-0 w-100"" disabled>Absensi</a>
-                        <p class="m-0"><small>Absensi tidak tersedia! anda sudah melakukan absensi hari
-                                ini!</small>
-                        </p>
+                        @if ($hasil_cek_waktu === false)
+                            <p class="m-0"><small>Absensi tidak tersedia! waktu habis!</small></p>
+                        @elseif($hasil_cek_ip === false)
+                            <p class="m-0"><small>Absensi tidak tersedia! anda berada di luar jangkauan
+                                    jaringan!</small>
+                            </p>
+                        @endif
                     @endif
-                @else
-                    <a class="btn btn-secondary mt-2 mb-0 w-100"" disabled>Absensi</a>
-                    @if ($hasil_cek_waktu === false)
-                        <p class="m-0"><small>Absensi tidak tersedia! waktu habis!</small></p>
-                    @elseif($hasil_cek_ip === false)
-                        <p class="m-0"><small>Absensi tidak tersedia! anda berada di luar jangkauan jaringan!</small>
-                        </p>
-                    @endif
-                @endif
-            </div>
+                </div>
+            @endif
             <div class="row">
                 <div class="col-6 d-flex" style="gap: 10px">
                     <button class="filter-btn btn btn-info" data-filter="hari"
