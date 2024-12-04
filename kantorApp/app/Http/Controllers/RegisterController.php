@@ -13,6 +13,7 @@ class RegisterController extends Controller
     }
 
     public function store(){
+        dd('hello');
 
         $attributes = request()->validate([
             'name' => 'required|max:255',

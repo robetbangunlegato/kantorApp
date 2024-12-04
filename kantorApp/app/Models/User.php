@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\CanResetPassword;
-
+use App\Models\DataPribadi;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -21,9 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'location',
-        'phone',
-        'about',
+        'role',
         'password_confirmation'
     ];
 
@@ -42,17 +40,13 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
-    
-    public function setPasswordAttribute($password)
-    {
-        $this->attributes['password'] = bcrypt($password);
-    }
 
     public function absensis(){
         return $this->hasMany(Absensi::class);
+    }
+
+    public function data_pribadi(){
+        return $this->hasOne(DataPribadi::class);
     }
 
 }

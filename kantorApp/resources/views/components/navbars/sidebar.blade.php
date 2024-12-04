@@ -57,21 +57,30 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activePage == 'billing' ? ' active bg-gradient-primary' : '' }}  "
-                    href="{{ route('billing') }}">
+                <a class="nav-link text-white {{ $activePage == 'catatangaji' ? ' active bg-gradient-primary' : '' }}  "
+                    href="{{ route('catatangaji.index') }}">
                     <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="material-icons opacity-10">receipt_long</i>
                     </div>
-                    <span class="nav-link-text ms-1">Billing</span>
+                    <span class="nav-link-text ms-1">Catatan Gaji</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white {{ $activePage == 'virtual-reality' ? ' active bg-gradient-primary' : '' }}  "
-                    href="{{ route('virtual-reality') }}">
+                <a class="nav-link text-white {{ $activePage == 'kelolajabatan' ? ' active bg-gradient-primary' : '' }}  "
+                    href="{{ route('kelolajabatan.index') }}">
                     <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
-                        <i class="material-icons opacity-10">view_in_ar</i>
+                        <i class="material-icons opacity-10">settings_accessibility</i>
                     </div>
-                    <span class="nav-link-text ms-1">Virtual Reality</span>
+                    <span class="nav-link-text ms-1">Kelola Jabatan</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white {{ $activePage == 'kelolapengguna' ? ' active bg-gradient-primary' : '' }}  "
+                    href="{{ route('kelolapengguna.index') }}">
+                    <div class="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                        <i class="material-icons opacity-10">groups</i>
+                    </div>
+                    <span class="nav-link-text ms-1">Kelola Pengguna</span>
                 </a>
             </li>
             <li class="nav-item">

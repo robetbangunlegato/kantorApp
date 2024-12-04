@@ -22,6 +22,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SessionsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CatatanGajiController;
+use App\Http\Controllers\KelolaPenggunaController;
+use App\Http\Controllers\KelolaJabatanController;
 use App\Http\Controllers\PengaturanAbsensiController;
             
 
@@ -73,6 +76,9 @@ Route::group(['middleware' => 'auth'], function () {
 	})->name('user-profile');
 	Route::resource('absensi', AbsensiController::class);
 	Route::resource('pengaturanabsensi', PengaturanAbsensiController::class);
+	Route::resource('catatangaji', CatatanGajiController::class);
+	Route::resource('kelolapengguna', KelolaPenggunaController::class);
+	Route::resource('kelolajabatan', KelolaJabatanController::class);	
 	Route::post('/absensi/filter', [AbsensiController::class, 'filter'])->name('absensi.filter');
 	Route::get('download-pdf', [AbsensiController::class, 'downloadPDF'])->name('absensi.download-pdf');
 

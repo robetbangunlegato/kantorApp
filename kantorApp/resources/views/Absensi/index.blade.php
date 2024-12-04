@@ -4,6 +4,7 @@
         <!-- Navbar -->
         <x-navbars.navs.auth titlePage="Absensi"></x-navbars.navs.auth>
         <!-- End Navbar -->
+
         <div class="container-fluid">
             @if (session('sukses'))
                 <div class="row">

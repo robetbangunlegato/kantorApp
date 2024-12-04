@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\PengaturanAbsensi;
 use App\Models\Absensi;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\User;
 
 class AbsensiController extends Controller
 {
@@ -16,8 +17,6 @@ class AbsensiController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request){
-        
-       
     // Logika Filter
    if ($request->ajax()) {
         $filterType = $request->input('filter'); // hari, bulan, atau tahun
@@ -105,6 +104,7 @@ class AbsensiController extends Controller
     public function store(Request $request)
     {
         //
+        
         $validasi = $request->validate([
             'status_absensi' => 'required'
         ]);
