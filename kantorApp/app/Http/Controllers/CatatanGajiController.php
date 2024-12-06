@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class CatatanGajiController extends Controller
 {
@@ -14,7 +15,15 @@ class CatatanGajiController extends Controller
     public function index()
     {
         //
-        return view('CatatanGaji.index');
+        $users = '';
+        $user = '';
+        if(Auth()->user()->role == 'admin'){
+            $users = User::all();
+        }else{
+            $user = User::where('id', auth()->user()->id)->first();
+        }
+        
+        return view('CatatanGaji.index', compact('user', 'users'));
     }
 
     /**
