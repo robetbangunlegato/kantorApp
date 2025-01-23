@@ -24,25 +24,13 @@
 
             @if (Auth()->user()->role == 'pegawai')
                 <div class="row">
-                    @if ($hasil_cek_waktu && $hasil_cek_ip)
-                        @if ($hasil_cek_double_absensi === false)
-                            <a href="{{ route('absensi.create') }}" class="btn btn-primary mb-4 w-100"
-                                data-bs-toggle="modal" data-bs-target="#modal_absensi">Absensi</a>
-                        @else
-                            <a class="btn btn-secondary mt-2 mb-0 w-100"" disabled>Absensi</a>
-                            <p class="m-0"><small>Absensi tidak tersedia! anda sudah melakukan absensi hari
-                                    ini!</small>
-                            </p>
-                        @endif
+                    @if ($hasil_cek_ip)
+                        <a href="{{ route('absensi.create') }}" class="btn btn-primary mb-4 w-100"
+                            data-bs-toggle="modal" data-bs-target="#modal_absensi">Absensi</a>
                     @else
-                        <a class="btn btn-secondary mt-2 mb-0 w-100"" disabled>Absensi</a>
-                        @if ($hasil_cek_waktu === false)
-                            <p class="m-0"><small>Absensi tidak tersedia! waktu habis!</small></p>
-                        @elseif($hasil_cek_ip === false)
-                            <p class="m-0"><small>Absensi tidak tersedia! anda berada di luar jangkauan
-                                    jaringan!</small>
-                            </p>
-                        @endif
+                        <p class="m-0"><small>Absensi tidak tersedia! anda berada di luar jangkauan
+                                jaringan!</small>
+                        </p>
                     @endif
                 </div>
             @endif
@@ -108,8 +96,13 @@
                                                 </p>
                                             </td>
                                             <td>
-                                                <p class="font-weight-normal mb-0">
-                                                    {{ $absensi->status_absensi }}</p>
+                                                @if (
+                                                    $absensi->created_at->format('H:i:s') > $pengaturan_absensi->check_in &&
+                                                        $absensi->created_at->format('H:i:s') < $pengaturan_absensi->check_out)
+                                                    <span class="badge bg-danger">Terlambat</span>
+                                                @else
+                                                    Hadir
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -133,7 +126,12 @@
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title font-weight-normal" id="exampleModalLabel">Absensi</h5>
+                        <div class="d-flex modal-title font-weight-normal gap-1">
+                            <h5 class="" id="exampleModalLabel">Absensi</h5>
+                            @if ($terlambat == true)
+                                <span class="badge bg-danger d-flex align-items-center">Terlambat!</span>
+                            @endif
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -171,6 +169,7 @@
                         value
                     };
 
+
                     $.ajax({
                         url: '/absensi',
                         type: 'GET',
@@ -182,32 +181,52 @@
                             const tbody = $('#absensi-table tbody');
                             tbody.empty();
 
+                            // Ambil waktu check_in dan check_out dari respons backend
+                            const checkIn = response.checkIn;
+                            const checkOut = response.checkOut;
+
                             if (response.data.length > 0) {
                                 let no = 1;
                                 response.data.forEach(item => {
+                                    // Format tanggal dengan moment.js
                                     const formattedDate = moment(item.created_at).format(
                                         'DD-MM-YYYY HH:mm:ss');
                                     const userName = item.user ? item.user.name :
                                         'Nama tidak tersedia';
+
+                                    // Ambil hanya jam dari `created_at`
+                                    const time = moment(item.created_at).format('HH:mm');
+
+                                    // Periksa apakah waktu berada dalam rentang 09:00-17:00
+                                    let statusHtml = item
+                                        .status_absensi; // Default dari backend
+                                    if (time >= checkIn && time <= checkOut) {
+                                        statusHtml =
+                                            `<span class="badge bg-danger">Terlambat</span>`;
+                                    }
+
+                                    // Buat baris tabel
                                     const row = `
-                            <tr>
-                                <td>${no}</td>
-                                <td>${userName}</td>
-                                <td>${formattedDate}</td>
-                                <td>${item.status_absensi}</td>
-                            </tr>`;
+                    <tr>
+                        <td>${no}</td>
+                        <td>${userName}</td>
+                        <td>${formattedDate}</td>
+                        <td>${statusHtml}</td>
+                    </tr>`;
                                     tbody.append(row);
                                     no++;
                                 });
                             } else {
                                 tbody.append(
-                                    '<tr><td colspan="4">Tidak ada data absensi!</td></tr>');
+                                    '<tr><td colspan="4">Tidak ada data absensi!</td></tr>'
+                                );
                             }
                         },
                         error: function(err) {
                             console.error('Gagal memuat data:', err);
                         }
                     });
+
                 });
 
                 $('.download-pdf').on('click', function(e) {
@@ -218,8 +237,6 @@
                     }
                     window.location.href = url;
                 });
-
-
             })
         </script>
     </main>

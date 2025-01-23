@@ -42,10 +42,10 @@
                                             Tempat Lahir
                                         </th>
                                         <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
-                                            Jabatan
+                                            Role
                                         </th>
                                         <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
-                                            Status
+                                            Jabatan
                                         </th>
                                         <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
                                             Opsi
@@ -61,10 +61,11 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $user->name }}</td>
                                             <td>{{ $user->email }}</td>
-                                            <td>{{ $user->data_pribadi->tanggal_lahir }}</td>
-                                            <td>{{ $user->data_pribadi->tempat_lahir }}</td>
+                                            <td>{{ $user->data_pribadi->tanggal_lahir ?? 'null' }}</td>
+                                            <td>{{ $user->data_pribadi->tempat_lahir ?? 'null' }}</td>
                                             <td>{{ $user->role }}</td>
-                                            <td>{{ $user->data_pribadi->jabatan_organisasi->nama_jabatan }}</td>
+                                            <td>{{ $user->data_pribadi->jabatan_organisasi->nama_jabatan ?? 'null' }}
+                                            </td>
                                             <td>
                                                 <div class="d-flex justify-content-center">
                                                     @if ($user->id === 1)

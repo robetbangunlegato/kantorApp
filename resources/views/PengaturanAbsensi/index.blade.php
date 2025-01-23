@@ -6,38 +6,37 @@
         <!-- End Navbar -->
         <div class="container-fluid py-4">
             <div class="col-12">
-                <form action="{{ route('pengaturanabsensi.update', $pengaturan_absensi[0]->id) }}" method="post">
+                <form action="{{ route('pengaturanabsensi.update', [($id = 1)]) }}" method="post">
                     @csrf
-                    @method('PUT')
+                    @method('patch')
                     <div class="row my-3">
                         <div class="col-xl-6 col-sm-12">
                             <div class="input-group input-group-static">
-                                <label for="pengaturanWaktuBukaAbsensi">Waktu Buka</label>
-                                <input type="time" class="form-control" id="pengaturanWaktuBukaAbsensi"
-                                    name="waktu_buka" value="{{ $pengaturan_absensi[0]->waktu_buka }}">
+                                <label for="check_in">Absen datang</label>
+                                <input type="time" class="form-control" id="check_in" name="check_in"
+                                    value="{{ $pengaturan_absensi[0]->check_in }}">
                             </div>
                         </div>
                         <div class="col-xl-6 col-sm-12">
                             <div class="input-group input-group-static">
-                                <label for="pengaturanWaktuTutupAbsensi">Waktu Tutup</label>
-                                <input type="time" class="form-control" id="pengaturanWaktuTutupAbsensi"
-                                    name="waktu_tutup" value="{{ $pengaturan_absensi[0]->waktu_tutup }}">
+                                <label for="check_out">Absen Pulang</label>
+                                <input type="time" class="form-control" id="check_out" name="check_out"
+                                    value="{{ $pengaturan_absensi[0]->check_out }}">
                             </div>
                         </div>
-                        <input type="hidden" name="id" value="{{ $pengaturan_absensi[0]->id }}">
                     </div>
                     <div class="row my-3">
                         <div class="col-xl-6 col-sm-12">
                             <div class="input-group input-group-outline is-filled">
-                                <label class="form-label"for="rentangAwalIP">Batas bawah alamat IP</label>
-                                <input type="text" class="form-control" id="rentangAwalIP" name="rentang_awal_ip"
+                                <label class="form-label"for="rentang_awal_IP">Batas bawah alamat IP</label>
+                                <input type="text" class="form-control" id="rentang_awal_IP" name="rentang_awal_IP"
                                     value="{{ $pengaturan_absensi[0]->rentang_awal_IP }}">
                             </div>
                         </div>
                         <div class="col-xl-6 col-sm-12">
                             <div class="input-group input-group-outline is-filled">
-                                <label class="form-label"for="rentangAkhirIP">Batas bawah alamat IP</label>
-                                <input type="text" class="form-control" id="rentangAkhirIP" name="rentang_akhir_ip"
+                                <label class="form-label"for="rentang_akhir_IP">Batas atas alamat IP</label>
+                                <input type="text" class="form-control" id="rentang_akhir_IP" name="rentang_akhir_IP"
                                     value="{{ $pengaturan_absensi[0]->rentang_akhir_IP }}">
                             </div>
                         </div>

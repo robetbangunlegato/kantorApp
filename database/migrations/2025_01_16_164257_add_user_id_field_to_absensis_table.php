@@ -13,11 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('pengaturan_absensis', function (Blueprint $table) {
-            $table->id();
-            $table->time('waktu_buka', $precision=1);
-            $table->time('waktu_tutup', $precision=1);
-            $table->timestamps();
+        Schema::table('absensis', function (Blueprint $table) {
+            //
+            $table->foreignId('user_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
@@ -28,6 +26,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('pengaturan_absensis');
+        Schema::table('absensis', function (Blueprint $table) {
+            //
+        });
     }
 };

@@ -15,13 +15,6 @@ class PengaturanAbsensiSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('pengaturan_absensis')->insert([
-            'waktu_buka' => '00:00',
-            'waktu_tutup' => '00:00',
-            'rentang_awal_IP' => '000.000.000.000',
-            'rentang_awal_IP' => '000.000.000.000', 
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        
     }
 }

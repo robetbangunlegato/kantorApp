@@ -36,7 +36,7 @@ class PengaturanAbsensiController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
     }
 
     /**
@@ -71,18 +71,19 @@ class PengaturanAbsensiController extends Controller
     public function update(Request $request, $id)
     {
         //
-        $validasi = $request->validate([
-            'waktu_buka' => 'required',
-            'waktu_tutup' => 'required',
-            'rentang_awal_ip'=> 'required | regex:/^\S*$/',
-            'rentang_akhir_ip' => 'required | regex:/^\S*$/'
+        $validate = $request->validate([
+            'check_in' => 'required',
+            'check_out' => 'required',
+            'rentang_awal_IP'=> 'required | regex:/^\S*$/',
+            'rentang_akhir_IP' => 'required | regex:/^\S*$/'
         ]);
-        $pengaturan_absensi = PengaturanAbsensi::findOrFail($id);
-        $pengaturan_absensi->waktu_buka = $validasi['waktu_buka'];
-        $pengaturan_absensi->waktu_tutup = $validasi['waktu_tutup'];
-        $pengaturan_absensi->rentang_awal_IP = $validasi['rentang_awal_ip'];
-        $pengaturan_absensi->rentang_akhir_IP = $validasi['rentang_akhir_ip'];
-        $pengaturan_absensi->save();
+
+        $pengaturan_absensi = PengaturanAbsensi::find(1);
+        $pengaturan_absensi->check_in = $validate['check_in'];
+        $pengaturan_absensi->check_out = $validate['check_out'];
+        $pengaturan_absensi->rentang_awal_IP = $validate['rentang_awal_IP'];
+        $pengaturan_absensi->rentang_akhir_IP = $validate['rentang_akhir_IP'];
+        $pengaturan_absensi->update();
         return redirect()->route('absensi.index')->with('sukses', 'Pengaturan absensi berhasil diubah!');
     }
 

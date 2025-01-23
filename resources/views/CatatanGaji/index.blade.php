@@ -50,7 +50,7 @@
                                         paid
                                     </span>
                                     <p class="mb-0">Gaji:
-                                        <strong>{{ $user->data_pribadi->jabatan_organisasi->besaran_gaji }}</strong>
+                                        <strong>{{ $user->data_pribadi->jabatan_organisasi->besaran_gaji ?? 'null' }}</strong>
                                     </p>
                                 </div>
                                 <div class="d-flex align-items-center">
@@ -58,7 +58,7 @@
                                         work
                                     </span>
                                     <p class="mb-0">Jabatan:
-                                        <strong>{{ $user->data_pribadi->jabatan_organisasi->nama_jabatan }}</strong>
+                                        <strong>{{ $user->data_pribadi->jabatan_organisasi->nama_jabatan ?? 'null' }}</strong>
                                     </p>
                                 </div>
                             </div>
