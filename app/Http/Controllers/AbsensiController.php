@@ -26,10 +26,11 @@ class AbsensiController extends Controller
                                      ->where('rentang_akhir_IP', '>=', $ip_pengguna)
                                      ->exists();
 
-    // 3. SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI PADA HARI YANG SAMA
-    // $hasil_cek_double_absensi = Absensi::where('user_id', auth()->id())
-    //                                    ->whereDate('created_at', Carbon::today())
-    //                                    ->exists();
+    // 3. SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI KEDATANGAN PADA HARI YANG SAMA
+    $double_absensi_datang = Absensi::where('user_id', auth()->id())
+                                       ->whereDate('created_at', Carbon::today())
+                                       ->where('status_absensi', 'datang')
+                                       ->exists();
 
 
     // 4. MENGAMBIL DATA ABSENSI SESUAI PENGGUNA
@@ -96,8 +97,20 @@ class AbsensiController extends Controller
         $terlambat = true;
     };
 
+    // 7.  SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI PULANG PADA HARI YANG SAMA
+    $double_absensi_pulang = Absensi::where('user_id', auth()->id())
+                                       ->whereDate('created_at', Carbon::today())
+                                       ->where('status_absensi', 'pulang')
+                                       ->exists();
 
-    return view('Absensi.index', compact('hasil_cek_ip', 'absensis', 'terlambat', 'pengaturan_absensi'));
+    // 7.  SYARAT TIDAK MELAKUKAN ABSENSI PULANG SEBELUM WAJTU PULANG
+    $pengaturan_absensi = PengaturanAbsensi::find(1);
+   
+    $waktu_absensi_pulang = Carbon::now()->greaterThan(
+    Carbon::createFromFormat('H:i:s.u', $pengaturan_absensi->check_out)
+);
+    
+    return view('Absensi.index', compact('hasil_cek_ip', 'absensis', 'terlambat', 'pengaturan_absensi','double_absensi_datang', 'double_absensi_pulang', 'waktu_absensi_pulang'));
 }
 
 
@@ -120,7 +133,6 @@ class AbsensiController extends Controller
     public function store(Request $request)
     {
         //
-        
         $validasi = $request->validate([
             'status_absensi' => 'required'
         ]);
