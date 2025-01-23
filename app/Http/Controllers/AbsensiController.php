@@ -92,7 +92,7 @@ class AbsensiController extends Controller
 
     // 6.CEK KETERLAMBATAN UNTUK MELABELI HEADER MODAL ABSENSI
     $terlambat = null;
-    if (Carbon::now()->greaterThan(Carbon::parse($pengaturan_absensi->check_in))){
+    if (Carbon::now()->between(Carbon::parse($pengaturan_absensi->check_in),Carbon::parse($pengaturan_absensi->check_out) )){
         $terlambat = true;
     };
 
