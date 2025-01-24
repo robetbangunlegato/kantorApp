@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\DataPribadi;
 
 class CatatanGajiController extends Controller
 {
@@ -15,6 +16,10 @@ class CatatanGajiController extends Controller
     public function index()
     {
         //
+        $first_account = DataPribadi::where('user_id', auth()->id())
+                                       ->where('id')
+                                       ->exists();
+
         $users = '';
         $user = '';
         if(Auth()->user()->role == 'admin'){
@@ -23,7 +28,7 @@ class CatatanGajiController extends Controller
             $user = User::where('id', auth()->user()->id)->first();
         }
         
-        return view('CatatanGaji.index', compact('user', 'users'));
+        return view('CatatanGaji.index', compact('user', 'users','first_account'));
     }
 
     /**

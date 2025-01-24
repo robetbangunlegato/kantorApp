@@ -187,15 +187,21 @@
                                                 @endphp
                                             </td>
                                             <td>
-                                                <p class="font-weight-normal mb-0">{{ $absensi->user->name }}
-                                                </p>
+                                                <p class="font-weight-normal mb-0">{{ $absensi->user->name }}</p>
                                             </td>
                                             <td>
-                                                <p class="font-weight-normal mb-0">{{ $absensi->created_at }}
-                                                </p>
+                                                <p class="font-weight-normal mb-0">{{ $absensi->created_at }}</p>
                                             </td>
+                                            @php
+                                                $createdAt = \Carbon\Carbon::parse($absensi->created_at);
+                                                $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in);
+                                                $checkOut = \Carbon\Carbon::parse($pengaturan_absensi->check_out);
+
+                                                // Cek manual
+                                                $isOnTime = $createdAt >= $checkIn && $createdAt <= $checkOut;
+                                            @endphp
                                             <td>
-                                                @if ($absensi->created_at->format('H:i:s.u') > $pengaturan_absensi->check_in)
+                                                @if ($isOnTime)
                                                     <span class="badge bg-danger">Terlambat</span>
                                                 @else
                                                     {{ $absensi->status_absensi }}
@@ -205,10 +211,11 @@
                                     @empty
                                         <tr>
                                             <td colspan="4" class="font-weight-normal">
-                                                Tidak ada data absensi !
+                                                Tidak ada data absensi!
                                             </td>
                                         </tr>
                                     @endforelse
+
                                 </tbody>
                             </table>
                             {{-- {{ $absensis->links() }} --}}
