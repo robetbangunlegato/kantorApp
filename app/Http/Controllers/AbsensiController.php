@@ -97,6 +97,12 @@ class AbsensiController extends Controller
         $terlambat = true;
     };
 
+
+    $terlambat_datang =  false;
+    if(Carbon::now()->greaterThan(Carbon::parse($pengaturan_absensi->check_in))){
+        $terlambat_datang = true;
+    };
+
     // 7.  SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI PULANG PADA HARI YANG SAMA
     $double_absensi_pulang = Absensi::where('user_id', auth()->id())
                                        ->whereDate('created_at', Carbon::today())
@@ -107,10 +113,18 @@ class AbsensiController extends Controller
     $pengaturan_absensi = PengaturanAbsensi::find(1);
    
     $waktu_absensi_pulang = Carbon::now()->greaterThan(
-    Carbon::createFromFormat('H:i:s.u', $pengaturan_absensi->check_out)
-);
+    Carbon::createFromFormat('H:i:s.u', $pengaturan_absensi->check_out));
+
+    $validasi_absensi_pulang = Absensi::where('user_id', auth()->id())
+    ->where('status_absensi', 'datang')
+    ->whereDate('created_at', Carbon::today()) // Mengecek data pada hari ini
+    ->exists();
     
-    return view('Absensi.index', compact('hasil_cek_ip', 'absensis', 'terlambat', 'pengaturan_absensi','double_absensi_datang', 'double_absensi_pulang', 'waktu_absensi_pulang'));
+    // dd($double_absensi_pulang);
+
+    
+    
+    return view('Absensi.index', compact('hasil_cek_ip', 'absensis', 'terlambat', 'pengaturan_absensi','double_absensi_datang', 'double_absensi_pulang', 'waktu_absensi_pulang','terlambat_datang','validasi_absensi_pulang'));
 }
 
 
@@ -233,27 +247,29 @@ public function downloadPDF(Request $request)
         $checkOut = $pengaturan_absensi->check_out ?? '17:00:00';
 
         $users = User::select('users.id', 'users.name', 'jabatan_organisasis.nama_jabatan', 'jabatan_organisasis.besaran_gaji')
-            ->join('data_pribadis', 'users.id', '=', 'data_pribadis.user_id')
-            ->join('jabatan_organisasis', 'data_pribadis.jabatan_organisasi_id', '=', 'jabatan_organisasis.id')
-            ->withCount(['absensis as jumlah_keterlambatan' => function ($query) use ($checkIn, $checkOut) {
-                $query->whereRaw("TIME(created_at) > ? AND TIME(created_at) < ?", [$checkIn, $checkOut]);
-            }])
-            ->get()
-            ->map(function ($user) {
-                $user->pinalti_per_keterlambatan = 50000;
-                $user->total_pinalti = $user->jumlah_keterlambatan * $user->pinalti_per_keterlambatan;
-                $user->gaji_akhir = $user->besaran_gaji - $user->total_pinalti;
-                return $user;
-            });
+    ->join('data_pribadis', 'users.id', '=', 'data_pribadis.user_id')
+    ->join('jabatan_organisasis', 'data_pribadis.jabatan_organisasi_id', '=', 'jabatan_organisasis.id')
+    ->withCount(['absensis as jumlah_keterlambatan' => function ($query) use ($checkIn) {
+        $query->whereRaw("TIME(created_at) > ?", [$checkIn])
+              ->where('status_absensi', 'datang');
+    }])
+    ->get()
+    ->map(function ($user) {
+        $user->pinalti_per_keterlambatan = 50000;
+        $user->total_pinalti = $user->jumlah_keterlambatan * $user->pinalti_per_keterlambatan;
+        $user->gaji_akhir = $user->besaran_gaji - $user->total_pinalti;
+        return $user;
+    });
 
-    
-    $pdf = Pdf::loadView('Absensi.laporan', compact('absensis', 'pengaturan_absensi','users'));
+
+            $terlambat_datang =  false;
+    if(Carbon::now()->greaterThan(Carbon::parse($pengaturan_absensi->check_in))){
+        $terlambat_datang = true;
+    };
+        
+    $pdf = Pdf::loadView('Absensi.laporan', compact('absensis', 'pengaturan_absensi','users','terlambat_datang'));
     return $pdf->download('laporan_absensi.pdf');
 }
-
-
-
-
 }
 
 

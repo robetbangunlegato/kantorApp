@@ -46,12 +46,14 @@
                     <td>{{ $no++ }}</td>
                     <td>{{ $absensi->user->name }}</td>
                     <td>{{ $absensi->created_at }}</td>
-                    @if (
-                        $absensi->created_at->format('H:i:s') > $pengaturan_absensi->check_in &&
-                            $absensi->created_at->format('H:i:s') < $pengaturan_absensi->check_out)
-                        <td class="text-danger">Terlambat</td>
+                    @if ($terlambat_datang)
+                        @if ($absensi->status_absensi === 'pulang')
+                            <td>{{ $absensi->status_absensi }}</td>
+                        @elseif($absensi->status_absensi === 'datang')
+                            <td>Terlambat</td>
+                        @endif
                     @else
-                        <td>Hadir</td>
+                        </td>{{ $absensi->status_absensi }}</td>
                     @endif
                 </tr>
             @endforeach

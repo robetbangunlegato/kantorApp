@@ -95,19 +95,29 @@
                                                 kedatangan</p>
                                             <div class="form-check">
                                                 @if ($waktu_absensi_pulang)
-                                                    @if ($double_absensi_pulang)
+                                                    @if ($validasi_absensi_pulang)
+                                                        @if (!$double_absensi_pulang)
+                                                            <input class="form-check-input absensi-radio" type="radio"
+                                                                name="status_absensi" id="absensi_pulang"
+                                                                value="pulang">
+                                                            <label class="form-check-label"
+                                                                for="absensi_pulang">Pulang</label>
+                                                        @else
+                                                            <input class="form-check-input absensi-radio" type="radio"
+                                                                name="status_absensi" id="absensi_pulang" value="pulang"
+                                                                disabled>
+                                                            <label class="form-check-label text-disabled"
+                                                                for="absensi_pulang">Pulang <span
+                                                                    class="text-danger">(Anda sudah melakukan absensi
+                                                                    pulang hari ini!)</span></label>
+                                                        @endif
+                                                    @else
                                                         <input class="form-check-input absensi-radio" type="radio"
                                                             name="status_absensi" id="absensi_pulang" value="pulang"
                                                             disabled>
                                                         <label class="form-check-label text-disabled"
-                                                            for="absensi_pulang">Pulang <span class="text-danger">(Anda
-                                                                sudah
-                                                                melakukan absensi kepulangan hari ini!)</span></label>
-                                                    @elseif(!$double_absensi_pulang)
-                                                        <input class="form-check-input absensi-radio" type="radio"
-                                                            name="status_absensi" id="absensi_pulang" value="pulang">
-                                                        <label class="form-check-label"
-                                                            for="absensi_pulang">Pulang</label>
+                                                            for="absensi_pulang">Pulang <span class="text-danger">(Isi
+                                                                terlebih dahulu absensi datang!)</span></label>
                                                     @endif
                                                 @elseif(!$waktu_absensi_pulang)
                                                     <input class="form-check-input absensi-radio" type="radio"
@@ -117,6 +127,35 @@
                                                         for="absensi_pulang">Pulang <span class="text-danger">(Belum
                                                             waktunya pulang!)</span></label>
                                                 @endif
+
+
+
+
+
+                                                {{-- @if ($validasi_absensi_pulang)
+                                                    @if ($double_absensi_pulang)
+                                                        <input class="form-check-input absensi-radio" type="radio"
+                                                            name="status_absensi" id="absensi_pulang" value="pulang"
+                                                            disabled>
+                                                        <label class="form-check-label text-disabled"
+                                                            for="absensi_pulang">Pulang <span
+                                                                class="text-danger">(Anda
+                                                                sudah
+                                                                melakukan absensi kepulangan hari ini!)</span></label>
+                                                    @elseif(!$double_absensi_pulang)
+                                                        <input class="form-check-input absensi-radio" type="radio"
+                                                            name="status_absensi" id="absensi_pulang" value="pulang">
+                                                        <label class="form-check-label"
+                                                            for="absensi_pulang">Pulang</label>
+                                                    @endif
+                                                @elseif(!$validasi_absensi_pulang)
+                                                    <input class="form-check-input absensi-radio" type="radio"
+                                                        name="status_absensi" id="absensi_pulang" value="pulang"
+                                                        disabled>
+                                                    <label class="form-check-label text-disabled"
+                                                        for="absensi_pulang">Pulang <span class="text-danger">(Belum
+                                                            waktunya pulang!)</span></label>
+                                                @endif --}}
                                             </div>
                                         </div>
                                     </div>
@@ -192,17 +231,21 @@
                                             <td>
                                                 <p class="font-weight-normal mb-0">{{ $absensi->created_at }}</p>
                                             </td>
-                                            @php
+                                            {{-- @php
                                                 $createdAt = \Carbon\Carbon::parse($absensi->created_at);
                                                 $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in);
                                                 $checkOut = \Carbon\Carbon::parse($pengaturan_absensi->check_out);
 
                                                 // Cek manual
                                                 $isOnTime = $createdAt >= $checkIn && $createdAt <= $checkOut;
-                                            @endphp
+                                            @endphp --}}
                                             <td>
-                                                @if ($isOnTime)
-                                                    <span class="badge bg-danger">Terlambat</span>
+                                                @if ($terlambat_datang)
+                                                    @if ($absensi->status_absensi === 'pulang')
+                                                        {{ $absensi->status_absensi }}
+                                                    @else
+                                                        <span class="badge bg-danger">Terlambat</span>
+                                                    @endif
                                                 @else
                                                     {{ $absensi->status_absensi }}
                                                 @endif
