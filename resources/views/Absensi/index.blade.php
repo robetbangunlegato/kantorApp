@@ -83,6 +83,10 @@
                                                     <input class="form-check-input absensi-radio" type="radio"
                                                         name="status_absensi" id="absensi_datang" value="datang">
                                                     <label class="form-check-label" for="absensi_datang">Datang</label>
+
+                                                    <input class="form-check-input absensi-radio" type="radio"
+                                                        name="status_absensi" id="izin" value="izin">
+                                                    <label class="form-check-label" for="izin">Izin</label>
                                                 @endif
 
 
@@ -94,68 +98,38 @@
                                             <p>Anda hanya dapat melakukan absensi pulang jika telah melakukan absensi
                                                 kedatangan</p>
                                             <div class="form-check">
-                                                @if ($waktu_absensi_pulang)
-                                                    @if ($validasi_absensi_pulang)
-                                                        @if (!$double_absensi_pulang)
-                                                            <input class="form-check-input absensi-radio" type="radio"
-                                                                name="status_absensi" id="absensi_pulang"
-                                                                value="pulang">
-                                                            <label class="form-check-label"
-                                                                for="absensi_pulang">Pulang</label>
-                                                        @else
-                                                            <input class="form-check-input absensi-radio" type="radio"
-                                                                name="status_absensi" id="absensi_pulang" value="pulang"
-                                                                disabled>
-                                                            <label class="form-check-label text-disabled"
-                                                                for="absensi_pulang">Pulang <span
-                                                                    class="text-danger">(Anda sudah melakukan absensi
-                                                                    pulang hari ini!)</span></label>
-                                                        @endif
-                                                    @else
+                                                <!-- cek apakah sudah lakukan absensi datang -->
+                                                @if ($validasi_absensi_pulang)
+                                                    @if (!$double_absensi_pulang)
                                                         <input class="form-check-input absensi-radio" type="radio"
-                                                            name="status_absensi" id="absensi_pulang" value="pulang"
-                                                            disabled>
-                                                        <label class="form-check-label text-disabled"
-                                                            for="absensi_pulang">Pulang <span class="text-danger">(Isi
-                                                                terlebih dahulu absensi datang!)</span></label>
-                                                    @endif
-                                                @elseif(!$waktu_absensi_pulang)
-                                                    <input class="form-check-input absensi-radio" type="radio"
-                                                        name="status_absensi" id="absensi_pulang" value="pulang"
-                                                        disabled>
-                                                    <label class="form-check-label text-disabled"
-                                                        for="absensi_pulang">Pulang <span class="text-danger">(Belum
-                                                            waktunya pulang!)</span></label>
-                                                @endif
-
-
-
-
-
-                                                {{-- @if ($validasi_absensi_pulang)
-                                                    @if ($double_absensi_pulang)
+                                                            name="status_absensi" id="absensi_pulang" value="pulang">
+                                                        <label class="form-check-label"
+                                                            for="absensi_pulang">Pulang</label>
+                                                    @else
                                                         <input class="form-check-input absensi-radio" type="radio"
                                                             name="status_absensi" id="absensi_pulang" value="pulang"
                                                             disabled>
                                                         <label class="form-check-label text-disabled"
                                                             for="absensi_pulang">Pulang <span
                                                                 class="text-danger">(Anda
-                                                                sudah
-                                                                melakukan absensi kepulangan hari ini!)</span></label>
-                                                    @elseif(!$double_absensi_pulang)
-                                                        <input class="form-check-input absensi-radio" type="radio"
-                                                            name="status_absensi" id="absensi_pulang" value="pulang">
-                                                        <label class="form-check-label"
-                                                            for="absensi_pulang">Pulang</label>
+                                                                sudah melakukan absensi
+                                                                pulang hari ini!)</span></label>
                                                     @endif
-                                                @elseif(!$validasi_absensi_pulang)
+                                                @elseif($izin)
                                                     <input class="form-check-input absensi-radio" type="radio"
                                                         name="status_absensi" id="absensi_pulang" value="pulang"
                                                         disabled>
                                                     <label class="form-check-label text-disabled"
-                                                        for="absensi_pulang">Pulang <span class="text-danger">(Belum
-                                                            waktunya pulang!)</span></label>
-                                                @endif --}}
+                                                        for="absensi_pulang">Pulang <span class="text-danger">(Anda
+                                                            melakukan izin hari ini!)</span></label>
+                                                @else
+                                                    <input class="form-check-input absensi-radio" type="radio"
+                                                        name="status_absensi" id="absensi_pulang" value="pulang"
+                                                        disabled>
+                                                    <label class="form-check-label text-disabled"
+                                                        for="absensi_pulang">Pulang <span class="text-danger">(Isi
+                                                            terlebih dahulu absensi datang!)</span></label>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -173,25 +147,55 @@
 
             </div>
             <div class="row">
-                <div class="col-6 d-flex" style="gap: 10px">
-                    <button class="filter-btn btn btn-info" data-filter="hari"
-                        data-value="{{ \Carbon\Carbon::today()->toDateString() }}">
-                        Filter Hari Ini
-                    </button>
-                    <button class="filter-btn btn btn-info" data-filter="bulan"
-                        data-value="{{ \Carbon\Carbon::now()->format('Y-m') }}">
-                        Filter Bulan Ini
-                    </button>
-                    <button class="filter-btn btn btn-info" data-filter="tahun"
-                        data-value="{{ \Carbon\Carbon::now()->year }}">
-                        Filter Tahun Ini
-                    </button>
-                </div>
-                <div class="col-6 d-flex justify-content-end">
-                    <a href="#" class="btn btn-success download-pdf">Unduh laporan</a>
-
+                <div class="col-12">
+                    <!-- Baris Filter -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Bagian Kiri: Filter Hari Ini, Tahun, Bulan -->
+                        <div class="d-flex gap-2 align-items-center">
+                            <!-- Filter Hari Ini -->
+                            <a href="{{ route('absensi.index', ['filter' => 'today']) }}" class="btn btn-primary"
+                                style="margin-top: 15px;">
+                                Hari Ini
+                            </a>
+                            <!-- Filter Tahun -->
+                            <select class="form-select w-auto" onchange="location = this.value;">
+                                <option value="">Pilih Tahun</option>
+                                @foreach ($availableYears as $year)
+                                    <option value="{{ route('absensi.index', ['year' => $year]) }}"
+                                        {{ request('year') == $year ? 'selected' : '' }}>
+                                        {{ $year }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <!-- Filter Bulan -->
+                            <form id="filterForm" method="GET" action="{{ route('absensi.index') }}"
+                                class="d-inline-block">
+                                <select name="month" class="form-select w-auto"
+                                    onchange="document.getElementById('filterForm').submit();">
+                                    <option value="" {{ request('month') ? '' : 'selected' }}>Pilih Bulan
+                                    </option>
+                                    @foreach ($availableMonths as $month)
+                                        <option value="{{ explode('-', $month['key'])[1] }}"
+                                            {{ request('month') == explode('-', $month['key'])[1] ? 'selected' : '' }}>
+                                            {{ $month['label'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <!-- Input hidden untuk year -->
+                                <input type="hidden" name="year" value="{{ request('year') ?? now()->year }}">
+                            </form>
+                        </div>
+                        <!-- Bagian Kanan: Tombol Unduh PDF -->
+                        <form method="GET" action="{{ route('absensi.download-pdf') }}" class="d-inline-block"
+                            style="margin-top: 15px;">
+                            <input type="hidden" name="month" value="{{ request('month') }}">
+                            <input type="hidden" name="year" value="{{ request('year') }}">
+                            <button type="submit" class="btn btn-success">Unduh PDF</button>
+                        </form>
+                    </div>
                 </div>
             </div>
+
             <div class="row">
                 <div class="col-12 p-0 mt-2">
                     <div class="card">
@@ -231,16 +235,22 @@
                                             <td>
                                                 <p class="font-weight-normal mb-0">{{ $absensi->created_at }}</p>
                                             </td>
-                                            {{-- @php
-                                                $createdAt = \Carbon\Carbon::parse($absensi->created_at);
-                                                $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in);
-                                                $checkOut = \Carbon\Carbon::parse($pengaturan_absensi->check_out);
-
-                                                // Cek manual
-                                                $isOnTime = $createdAt >= $checkIn && $createdAt <= $checkOut;
-                                            @endphp --}}
+                                            @php
+                                                $terlambat_datang = false;
+                                                $createdAt = \Carbon\Carbon::parse($absensi->created_at)->format(
+                                                    'H:i:s',
+                                                );
+                                                $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in)->format(
+                                                    'H:i:s',
+                                                );
+                                                if ($createdAt > $checkIn) {
+                                                    $terlambat_datang = true;
+                                                }
+                                            @endphp
                                             <td>
-                                                @if ($terlambat_datang)
+                                                @if ($absensi->status_absensi === 'izin')
+                                                    {{ $absensi->status_absensi }}
+                                                @elseif($terlambat_datang)
                                                     @if ($absensi->status_absensi === 'pulang')
                                                         {{ $absensi->status_absensi }}
                                                     @else
@@ -306,82 +316,14 @@
                 $("#pesan_sukses").delay(3000).fadeOut("slow");
                 let currentFilter = null;
 
-                $('.filter-btn').on('click', function() {
-                    const filter = $(this).data('filter');
-                    const value = $(this).data('value');
 
-                    // Simpan filter untuk digunakan saat unduh
-                    currentFilter = {
-                        filter,
-                        value
-                    };
-
-
-                    $.ajax({
-                        url: '/absensi',
-                        type: 'GET',
-                        data: {
-                            filter,
-                            value
-                        },
-                        success: function(response) {
-                            const tbody = $('#absensi-table tbody');
-                            tbody.empty();
-
-                            // Ambil waktu check_in dan check_out dari respons backend
-                            const checkIn = response.checkIn;
-                            const checkOut = response.checkOut;
-
-                            if (response.data.length > 0) {
-                                let no = 1;
-                                response.data.forEach(item => {
-                                    // Format tanggal dengan moment.js
-                                    const formattedDate = moment(item.created_at).format(
-                                        'DD-MM-YYYY HH:mm:ss');
-                                    const userName = item.user ? item.user.name :
-                                        'Nama tidak tersedia';
-
-                                    // Ambil hanya jam dari `created_at`
-                                    const time = moment(item.created_at).format('HH:mm');
-
-                                    // Periksa apakah waktu berada dalam rentang 09:00-17:00
-                                    let statusHtml = item
-                                        .status_absensi; // Default dari backend
-                                    if (time >= checkIn && time <= checkOut) {
-                                        statusHtml =
-                                            `<span class="badge bg-danger">Terlambat</span>`;
-                                    }
-
-                                    // Buat baris tabel
-                                    const row = `
-                    <tr>
-                        <td>${no}</td>
-                        <td>${userName}</td>
-                        <td>${formattedDate}</td>
-                        <td>${statusHtml}</td>
-                    </tr>`;
-                                    tbody.append(row);
-                                    no++;
-                                });
-                            } else {
-                                tbody.append(
-                                    '<tr><td colspan="4">Tidak ada data absensi!</td></tr>'
-                                );
-                            }
-                        },
-                        error: function(err) {
-                            console.error('Gagal memuat data:', err);
-                        }
-                    });
-
-                });
 
                 $('.download-pdf').on('click', function(e) {
                     e.preventDefault();
                     let url = "{{ route('absensi.download-pdf') }}";
-                    if (currentFilter) {
-                        url += `?filter=${currentFilter.filter}&value=${currentFilter.value}`;
-                    }
+                    // if (currentFilter) {
+                    //     url += `?filter=${currentFilter.filter}&value=${currentFilter.value}`;
+                    // }
                     window.location.href = url;
                 });
             })

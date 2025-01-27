@@ -50,7 +50,11 @@ class User extends Authenticatable
     }
 
     public function jabatan()
-{
-    return $this->belongsTo(JabatanOrganisasi::class);
-}
+    {
+        return $this->belongsTo(JabatanOrganisasi::class);
+    }
+    public function jabatanOrganisasi()
+    {
+        return $this->belongsTo(JabatanOrganisasi::class, 'jabatan_organisasi_id');
+    }
 }

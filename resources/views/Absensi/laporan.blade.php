@@ -6,24 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Absensi</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
         }
 
+        table,
         th,
         td {
-            border: 1px solid #ddd;
-            text-align: center;
-            padding: 8px;
+            border: 1px solid black;
+            font-size: 13px;
         }
 
-        th {
-            background-color: #f2f2f2;
+
+        th,
+        td {
+            padding: 8px;
+            text-align: center;
         }
     </style>
 </head>
@@ -46,21 +45,34 @@
                     <td>{{ $no++ }}</td>
                     <td>{{ $absensi->user->name }}</td>
                     <td>{{ $absensi->created_at }}</td>
-                    @if ($terlambat_datang)
-                        @if ($absensi->status_absensi === 'pulang')
-                            <td>{{ $absensi->status_absensi }}</td>
-                        @elseif($absensi->status_absensi === 'datang')
-                            <td>Terlambat</td>
+                    @php
+                        $terlambat_datang = false;
+                        $createdAt = \Carbon\Carbon::parse($absensi->created_at)->format('H:i:s');
+                        $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in)->format('H:i:s');
+                        if ($createdAt > $checkIn) {
+                            $terlambat_datang = true;
+                        }
+                    @endphp
+                    <td>
+                        @if ($absensi->status_absensi === 'izin')
+                            {{ $absensi->status_absensi }}
+                        @elseif($terlambat_datang)
+                            @if ($absensi->status_absensi === 'pulang')
+                                {{ $absensi->status_absensi }}
+                            @else
+                                <p class="text-danger">Terlambat</p>
+                            @endif
+                        @else
+                            {{ $absensi->status_absensi }}
                         @endif
-                    @else
-                        </td>{{ $absensi->status_absensi }}</td>
-                    @endif
+                    </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
     @if (auth()->user()->role === 'admin')
-        <h1 style="text-align: center;">Laporan Gaji</h1>
+        <h2>Laporan Absensi</h2>
+        <p>Periode: {{ $startDate->format('d-m-Y') }} s/d {{ $endDate->format('d-m-Y') }}</p>
         <table>
             <thead>
                 <tr>
@@ -68,24 +80,29 @@
                     <th>Nama</th>
                     <th>Jabatan</th>
                     <th>Gaji Pokok</th>
-                    <th>Jumlah keterlambatan</th>
-                    <th>Pinalti 1x keterlambatan</th>
+                    <th>Kehadiran</th>
+                    <th>Izin</th>
+                    <th>Pinalti Izin</th>
+                    <th>Keterlambatan</th>
+                    <th>Pinalti Keterlambatan</th>
                     <th>Total Pinalti</th>
                     <th>Gaji Akhir</th>
                 </tr>
             </thead>
             <tbody>
-                @php $no = 1; @endphp
-                @foreach ($users as $user)
+                @foreach ($data as $item)
                     <tr>
-                        <td>{{ $no++ }}</td>
-                        <td>{{ $user->name }}</td>
-                        <td>{{ $user->nama_jabatan }}</td>
-                        <td>{{ $user->besaran_gaji }}</td>
-                        <td>{{ $user->jumlah_keterlambatan }}</td>
-                        <td>{{ $user->pinalti_per_keterlambatan }}</td>
-                        <td>{{ $user->total_pinalti }}</td>
-                        <td>{{ $user->gaji_akhir }}</td>
+                        <td>{{ $item->nomor }}</td>
+                        <td>{{ $item->nama }}</td>
+                        <td>{{ $item->jabatan }}</td>
+                        <td>Rp {{ number_format($item->gaji_pokok, 0, ',', '.') }}</td>
+                        <td>{{ $item->kehadiran_format }}</td>
+                        <td>{{ $item->izin }}</td>
+                        <td>Rp {{ number_format($item->pinalti_izin, 0, ',', '.') }}</td>
+                        <td>{{ $item->keterlambatan }}</td>
+                        <td>Rp {{ number_format($item->pinalti_keterlambatan, 0, ',', '.') }}</td>
+                        <td>Rp {{ number_format($item->total_pinalti, 0, ',', '.') }}</td>
+                        <td>Rp {{ number_format($item->gaji_akhir, 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </tbody>

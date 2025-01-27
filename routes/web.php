@@ -81,5 +81,7 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::resource('kelolajabatan', KelolaJabatanController::class);	
 	Route::post('/absensi/filter', [AbsensiController::class, 'filter'])->name('absensi.filter');
 	Route::get('download-pdf', [AbsensiController::class, 'downloadPDF'])->name('absensi.download-pdf');
+	Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+
 
 });

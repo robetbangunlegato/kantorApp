@@ -16,116 +16,105 @@ class AbsensiController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request){
-
-   
-
-    // 2. SYARAT ALAMAT IP
+    public function index(Request $request)
+{
+    // 1. SYARAT ALAMAT IP
     $ip_pengguna = $request->ip();
     $hasil_cek_ip = PengaturanAbsensi::where('rentang_awal_IP', '<=', $ip_pengguna)
-                                     ->where('rentang_akhir_IP', '>=', $ip_pengguna)
-                                     ->exists();
+        ->where('rentang_akhir_IP', '>=', $ip_pengguna)
+        ->exists();
 
-    // 3. SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI KEDATANGAN PADA HARI YANG SAMA
+    // 2. SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI KEDATANGAN PADA HARI YANG SAMA
     $double_absensi_datang = Absensi::where('user_id', auth()->id())
-                                       ->whereDate('created_at', Carbon::today())
-                                       ->where('status_absensi', 'datang')
-                                       ->exists();
+        ->whereDate('created_at', Carbon::today())
+        ->where('status_absensi', 'datang')
+        ->orwhere('status_absensi','izin')
+        ->exists();
+    //  3.FILTER
 
 
-    // 4. MENGAMBIL DATA ABSENSI SESUAI PENGGUNA
-    $pengguna_aktif = auth()->user();
-    if ($pengguna_aktif->email == 'admin@material.com') {
-        $absensis = Absensi::all();
-    } else {
-        $absensis = $pengguna_aktif->absensis;
+     $absensis = \App\Models\Absensi::query();
+    
+    // Filter berdasarkan request
+    if ($request->has('filter') && $request->filter === 'today') {
+        $absensis->whereDate('created_at', Carbon::today());
+    } elseif ($request->has('month') && $request->has('year')) {
+        // Prioritaskan filter bulan dan tahun
+        $absensis->whereYear('created_at', $request->year)
+                ->whereMonth('created_at', $request->month);
+    } elseif ($request->has('year')) {
+        // Jika hanya filter tahun
+        $absensis->whereYear('created_at', $request->year);
     }
 
+    $absensis = $absensis->get();
+
+    // Dapatkan tahun yang tersedia dari data absensi
+    $availableYears = \App\Models\Absensi::selectRaw('YEAR(created_at) as year')
+        ->distinct()
+        ->pluck('year');
+
+    // Dapatkan bulan yang tersedia dari data absensi
+    $availableMonths = \App\Models\Absensi::selectRaw('MONTH(created_at) as month, YEAR(created_at) as year')
+        ->distinct()
+        ->get()
+        ->map(function ($item) {
+            $date = Carbon::create($item->year, $item->month, 1);
+            return [
+                'key' => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT),
+                'label' => $date->translatedFormat('F Y'),
+            ];
+        });
     // 5. DATA PENGATURAN ABSENSI
     $pengaturan_absensi = PengaturanAbsensi::find(1);
     $checkIn = $pengaturan_absensi->check_in;
     $checkOut = $pengaturan_absensi->check_out;
 
-     // Logika Filter
-   if ($request->ajax()) {
-        $pengaturan_absensi = PengaturanAbsensi::find(1);
-        $checkIn = $pengaturan_absensi->check_in;
-        $checkOut = $pengaturan_absensi->check_out;
-        $filterType = $request->input('filter'); // hari, bulan, atau tahun
-        $filterValue = $request->input('value'); // nilai filter
-
-        $query = Absensi::query();
-
-        // Terapkan filter berdasarkan parameter
-        if ($filterType === 'hari' && $filterValue) {
-            $query->whereDate('created_at', $filterValue);
-        } elseif ($filterType === 'bulan' && $filterValue) {
-            $query->whereMonth('created_at', Carbon::parse($filterValue)->month)
-                ->whereYear('created_at', Carbon::parse($filterValue)->year);
-        } elseif ($filterType === 'tahun' && $filterValue) {
-            $query->whereYear('created_at', $filterValue);
-        }
-
-        // Filter data sesuai peran pengguna
-        $pengguna_aktif = auth()->user();
-        if ($pengguna_aktif->role == 'pegawai') {
-            $query->where('user_id', $pengguna_aktif->id);
-        }
-
-        // Tambahkan eager loading untuk relasi `user`
-        $filteredData = $query->with('user')->get()->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'user' => $item->user,
-                'created_at' => $item->created_at->toIso8601String(), // Format ISO 8601
-                'status_absensi' => $item->status_absensi,
-            ];
-        });
-
-        // Kembalikan respons JSON untuk AJAX
-        return response()->json([
-            'data' => $filteredData,
-            'checkIn' => $checkIn,
-            'checkOut' => $checkOut
-        ]);
+    // 6. CEK KETERLAMBATAN UNTUK MODAL ABSENSI
+    $terlambat = null;
+    if (Carbon::now()->between(Carbon::parse($pengaturan_absensi->check_in), Carbon::parse($pengaturan_absensi->check_out))) {
+        $terlambat = true;
     }
 
-
-    // 6.CEK KETERLAMBATAN UNTUK MELABELI HEADER MODAL ABSENSI
-    $terlambat = null;
-    if (Carbon::now()->between(Carbon::parse($pengaturan_absensi->check_in),Carbon::parse($pengaturan_absensi->check_out) )){
-        $terlambat = true;
-    };
-
-
-    $terlambat_datang =  false;
-    if(Carbon::now()->greaterThan(Carbon::parse($pengaturan_absensi->check_in))){
-        $terlambat_datang = true;
-    };
-
-    // 7.  SYARAT TIDAK MELAKUKAN DOUBLE ABSENSI PULANG PADA HARI YANG SAMA
+    // 7. SYARAT DOUBLE ABSENSI PULANG DAN VALIDASI
     $double_absensi_pulang = Absensi::where('user_id', auth()->id())
-                                       ->whereDate('created_at', Carbon::today())
-                                       ->where('status_absensi', 'pulang')
-                                       ->exists();
+        ->whereDate('created_at', Carbon::today())
+        ->where('status_absensi', 'pulang')
+        ->exists();
 
-    // 7.  SYARAT TIDAK MELAKUKAN ABSENSI PULANG SEBELUM WAJTU PULANG
-    $pengaturan_absensi = PengaturanAbsensi::find(1);
-   
+
+    
+
     $waktu_absensi_pulang = Carbon::now()->greaterThan(
-    Carbon::createFromFormat('H:i:s.u', $pengaturan_absensi->check_out));
+        Carbon::createFromFormat('H:i:s.u', $pengaturan_absensi->check_out)
+    );
 
     $validasi_absensi_pulang = Absensi::where('user_id', auth()->id())
-    ->where('status_absensi', 'datang')
-    ->whereDate('created_at', Carbon::today()) // Mengecek data pada hari ini
-    ->exists();
-    
-    // dd($double_absensi_pulang);
+        ->where('status_absensi', 'datang')
+        ->whereDate('created_at', Carbon::today())
+        ->exists();
 
-    
-    
-    return view('Absensi.index', compact('hasil_cek_ip', 'absensis', 'terlambat', 'pengaturan_absensi','double_absensi_datang', 'double_absensi_pulang', 'waktu_absensi_pulang','terlambat_datang','validasi_absensi_pulang'));
+    // 8. IZIN
+    $izin = Absensi::where('user_id', auth()->id())
+        ->whereDate('created_at', Carbon::today())
+        ->where('status_absensi', 'izin')
+        ->exists();
+
+    return view('Absensi.index', compact(
+        'hasil_cek_ip',
+        'absensis',
+        'terlambat',
+        'pengaturan_absensi',
+        'double_absensi_datang',
+        'double_absensi_pulang',
+        'waktu_absensi_pulang',
+        'validasi_absensi_pulang',
+        'availableYears', 
+        'availableMonths',
+        'izin',
+    ));
 }
+
 
 
     /**
@@ -210,65 +199,63 @@ class AbsensiController extends Controller
 
 public function downloadPDF(Request $request)
 {
-    $pengaturan_absensi = PengaturanAbsensi::find(1);
-    $filterType = $request->input('filter'); // hari, bulan, atau tahun
-    $filterValue = $request->input('value'); // nilai filter
+    // Tentukan range waktu default (30 hari terakhir)
+    $startDate = $request->has('month') 
+        ? Carbon::create($request->year, $request->month, 1)->startOfMonth()
+        : Carbon::now()->subDays(29)->startOfDay();
 
-    $query = Absensi::query();
+    $endDate = $request->has('month') 
+        ? Carbon::create($request->year, $request->month, 1)->endOfMonth()
+        : Carbon::now()->endOfDay();
 
-    if ($filterType === 'hari' && $filterValue) {
-        $query->whereDate('created_at', $filterValue);
-    } elseif ($filterType === 'bulan' && $filterValue) {
-        $query->whereMonth('created_at', Carbon::parse($filterValue)->month)
-              ->whereYear('created_at', Carbon::parse($filterValue)->year);
-    } elseif ($filterType === 'tahun' && $filterValue) {
-        $query->whereYear('created_at', $filterValue);
-    }
-
-    $penggunaAktif = auth()->user();
-    if ($penggunaAktif->email !== 'admin@material.com') {
-        $query->where('user_id', $penggunaAktif->id);
-    }
-    
-    $absensis = $query->orderBy('created_at', 'desc')->get();
-
-    $users = User::with(['jabatan', 'absensis'])
-        ->whereHas('absensis', function ($query) {
-            $query->whereBetween('created_at', [
-                Carbon::now()->startOfMonth(),
-                Carbon::now()->endOfMonth(),
-            ]);
-        })
-        ->get();
-
-        // Ambil waktu check_in dan check_out dari tabel pengaturan absensi
-        $pengaturan_absensi = PengaturanAbsensi::first(); // Asumsi hanya ada satu baris
-        $checkIn = $pengaturan_absensi->check_in ?? '09:00:00'; // Default waktu jika tidak ditemukan
-        $checkOut = $pengaturan_absensi->check_out ?? '17:00:00';
-
-        $users = User::select('users.id', 'users.name', 'jabatan_organisasis.nama_jabatan', 'jabatan_organisasis.besaran_gaji')
+    // Query data
+    $data = \DB::table('absensis')
+    ->join('users', 'absensis.user_id', '=', 'users.id')
     ->join('data_pribadis', 'users.id', '=', 'data_pribadis.user_id')
     ->join('jabatan_organisasis', 'data_pribadis.jabatan_organisasi_id', '=', 'jabatan_organisasis.id')
-    ->withCount(['absensis as jumlah_keterlambatan' => function ($query) use ($checkIn) {
-        $query->whereRaw("TIME(created_at) > ?", [$checkIn])
-              ->where('status_absensi', 'datang');
-    }])
-    ->get()
-    ->map(function ($user) {
-        $user->pinalti_per_keterlambatan = 50000;
-        $user->total_pinalti = $user->jumlah_keterlambatan * $user->pinalti_per_keterlambatan;
-        $user->gaji_akhir = $user->besaran_gaji - $user->total_pinalti;
-        return $user;
-    });
+    ->join('pengaturan_absensis', \DB::raw('1'), '=', \DB::raw('1')) // Join dummy karena tidak ada relasi langsung
+    ->select(
+        'users.name as nama',
+        'jabatan_organisasis.nama_jabatan as jabatan',
+        'jabatan_organisasis.besaran_gaji as gaji_pokok',
+        \DB::raw('COUNT(CASE WHEN absensis.status_absensi = "datang" THEN 1 END) as kehadiran'),
+        \DB::raw('COUNT(CASE WHEN absensis.status_absensi = "izin" THEN 1 END) as izin'),
+        \DB::raw('SUM(CASE WHEN absensis.status_absensi = "datang" AND TIME(absensis.created_at) > pengaturan_absensis.check_in THEN 1 ELSE 0 END) as keterlambatan')
+    )
+    ->whereBetween('absensis.created_at', [$startDate, $endDate])
+    ->groupBy('users.id', 'jabatan_organisasis.nama_jabatan', 'jabatan_organisasis.besaran_gaji')
+    ->get();
 
 
-            $terlambat_datang =  false;
-    if(Carbon::now()->greaterThan(Carbon::parse($pengaturan_absensi->check_in))){
-        $terlambat_datang = true;
-    };
-        
-    $pdf = Pdf::loadView('Absensi.laporan', compact('absensis', 'pengaturan_absensi','users','terlambat_datang'));
+    // Tambahkan data kalkulasi
+    foreach ($data as $index => $item) {
+        $item->nomor = $index + 1;
+        $item->total_hari = $startDate->diffInDays($endDate) + 1;
+        $item->kehadiran_format = "{$item->kehadiran}/{$item->total_hari}";
+        $item->pinalti_izin = max(0, ($item->izin - 3) * 50000);
+        $item->pinalti_keterlambatan = $item->keterlambatan * 25000;
+        $item->total_pinalti = $item->pinalti_izin + $item->pinalti_keterlambatan;
+        $item->gaji_akhir = $item->gaji_pokok - $item->total_pinalti;
+    }
+
+    // $absensi = null;
+    if ($request->year == null || $request->month == null) {  
+        // Jika tidak ada parameter year dan month
+        $absensis = Absensi::whereBetween('created_at', [$startDate, $endDate])->get();
+    }else{
+        $absensis = Absensi::whereYear('created_at',$request->year )->whereMonth('created_at',$request->month)->get();
+    }
+   
+    $pengaturan_absensi = PengaturanAbsensi::find(1);
+
+    // Generate PDF
+    $pdf = Pdf::loadView('Absensi.laporan', compact('data', 'startDate', 'endDate','absensis','pengaturan_absensi'))->setPaper('f4','landscape');
+
+    // Unduh PDF
     return $pdf->download('laporan_absensi.pdf');
+        
+    // $pdf = Pdf::loadView('Absensi.laporan', compact('absensis', 'pengaturan_absensi','users','terlambat_datang'));
+    // return $pdf->download('laporan_absensi.pdf');
 }
 }
 
