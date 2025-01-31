@@ -197,6 +197,9 @@
             </div>
 
             <div class="row">
+                <h2>Absensi Datang</h2>
+            </div>
+            <div class="row">
                 <div class="col-12 p-0 mt-2">
                     <div class="card">
                         <div class="table-responsive">
@@ -222,45 +225,199 @@
                                         $no = 1;
                                     @endphp
                                     @forelse ($absensis as $absensi)
-                                        <tr>
-                                            <td>
-                                                <p class="font-weight-normal mb-0">{{ $no }}</p>
+                                        @php
+                                            $terlambat_datang = false;
+                                            $createdAt = \Carbon\Carbon::parse($absensi->created_at)->format('H:i:s');
+                                            $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in)->format(
+                                                'H:i:s',
+                                            );
+                                            if ($createdAt > $checkIn) {
+                                                $terlambat_datang = true;
+                                            }
+                                        @endphp
+                                        @if ($absensi->status_absensi === 'datang' && !$terlambat_datang)
+                                            <tr>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $no }}</p>
+                                                    @php
+                                                        $no++;
+                                                    @endphp
+                                                </td>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $absensi->user->name }}</p>
+                                                </td>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $absensi->created_at }}</p>
+                                                </td>
                                                 @php
-                                                    $no++;
+                                                    $terlambat_datang = false;
+                                                    $createdAt = \Carbon\Carbon::parse($absensi->created_at)->format(
+                                                        'H:i:s',
+                                                    );
+                                                    $checkIn = \Carbon\Carbon::parse(
+                                                        $pengaturan_absensi->check_in,
+                                                    )->format('H:i:s');
+                                                    if ($createdAt > $checkIn) {
+                                                        $terlambat_datang = true;
+                                                    }
                                                 @endphp
-                                            </td>
-                                            <td>
-                                                <p class="font-weight-normal mb-0">{{ $absensi->user->name }}</p>
-                                            </td>
-                                            <td>
-                                                <p class="font-weight-normal mb-0">{{ $absensi->created_at }}</p>
-                                            </td>
-                                            @php
-                                                $terlambat_datang = false;
-                                                $createdAt = \Carbon\Carbon::parse($absensi->created_at)->format(
-                                                    'H:i:s',
-                                                );
-                                                $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in)->format(
-                                                    'H:i:s',
-                                                );
-                                                if ($createdAt > $checkIn) {
-                                                    $terlambat_datang = true;
-                                                }
-                                            @endphp
-                                            <td>
-                                                @if ($absensi->status_absensi === 'izin')
+                                                <td>
                                                     {{ $absensi->status_absensi }}
-                                                @elseif($terlambat_datang)
-                                                    @if ($absensi->status_absensi === 'pulang')
-                                                        {{ $absensi->status_absensi }}
-                                                    @else
-                                                        <span class="badge bg-danger">Terlambat</span>
-                                                    @endif
-                                                @else
-                                                    {{ $absensi->status_absensi }}
-                                                @endif
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="font-weight-normal">
+                                                Tidak ada data absensi!
                                             </td>
                                         </tr>
+                                    @endforelse
+
+                                </tbody>
+                            </table>
+                            {{-- {{ $absensis->links() }} --}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <h2>Terlambat</h2>
+            </div>
+            <div class="row">
+                <div class="col-12 p-0 mt-2">
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0" id="absensi-table">
+                                <thead class="text-center">
+                                    <tr>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            No
+                                        </th>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            Nama
+                                        </th>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            Waktu absensi
+                                        </th>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            Keterangan
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-center" style="">
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($absensis as $absensi)
+                                        @php
+                                            $terlambat_datang = false;
+                                            $createdAt = \Carbon\Carbon::parse($absensi->created_at)->format('H:i:s');
+                                            $checkIn = \Carbon\Carbon::parse($pengaturan_absensi->check_in)->format(
+                                                'H:i:s',
+                                            );
+                                            if ($createdAt > $checkIn) {
+                                                $terlambat_datang = true;
+                                            }
+                                        @endphp
+                                        @if ($terlambat_datang && $absensi->status_absensi == 'datang')
+                                            <tr>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $no }}</p>
+                                                    @php
+                                                        $no++;
+                                                    @endphp
+                                                </td>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $absensi->user->name }}</p>
+                                                </td>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $absensi->created_at }}</p>
+                                                </td>
+
+                                                <td>
+                                                    <span class="badge bg-danger">Terlambat</span>
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="font-weight-normal">
+                                                Tidak ada data absensi!
+                                            </td>
+                                        </tr>
+                                    @endforelse
+
+                                </tbody>
+                            </table>
+                            {{-- {{ $absensis->links() }} --}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <h2>Absensi Pulang</h2>
+            </div>
+            <div class="row">
+                <div class="col-12 p-0 mt-2">
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0" id="absensi-table">
+                                <thead class="text-center">
+                                    <tr>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            No
+                                        </th>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            Nama
+                                        </th>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            Waktu absensi
+                                        </th>
+                                        <th class="text-uppercase text-secondary font-weight-bolder opacity-7">
+                                            Keterangan
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-center" style="">
+                                    @php
+                                        $no = 1;
+                                    @endphp
+                                    @forelse ($absensis as $absensi)
+                                        @if ($absensi->status_absensi === 'pulang')
+                                            <tr>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $no }}</p>
+                                                    @php
+                                                        $no++;
+                                                    @endphp
+                                                </td>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $absensi->user->name }}</p>
+                                                </td>
+                                                <td>
+                                                    <p class="font-weight-normal mb-0">{{ $absensi->created_at }}</p>
+                                                </td>
+                                                @php
+                                                    $terlambat_datang = false;
+                                                    $createdAt = \Carbon\Carbon::parse($absensi->created_at)->format(
+                                                        'H:i:s',
+                                                    );
+                                                    $checkIn = \Carbon\Carbon::parse(
+                                                        $pengaturan_absensi->check_in,
+                                                    )->format('H:i:s');
+                                                    if ($createdAt > $checkIn) {
+                                                        $terlambat_datang = true;
+                                                    }
+                                                @endphp
+                                                <td>
+                                                    {{ $absensi->status_absensi }}
+
+
+                                                </td>
+                                            </tr>
+                                        @endif
                                     @empty
                                         <tr>
                                             <td colspan="4" class="font-weight-normal">

@@ -71,7 +71,7 @@
         </tbody>
     </table>
     @if (auth()->user()->role === 'admin')
-        <h2>Laporan Absensi</h2>
+        <h2>Laporan Gaji</h2>
         <p>Periode: {{ $startDate->format('d-m-Y') }} s/d {{ $endDate->format('d-m-Y') }}</p>
         <table>
             <thead>
@@ -80,10 +80,8 @@
                     <th>Nama</th>
                     <th>Jabatan</th>
                     <th>Gaji Pokok</th>
-                    <th>Kehadiran</th>
                     <th>Izin</th>
                     <th>Pinalti Izin</th>
-                    <th>Keterlambatan</th>
                     <th>Pinalti Keterlambatan</th>
                     <th>Total Pinalti</th>
                     <th>Gaji Akhir</th>
@@ -96,13 +94,49 @@
                         <td>{{ $item->nama }}</td>
                         <td>{{ $item->jabatan }}</td>
                         <td>Rp {{ number_format($item->gaji_pokok, 0, ',', '.') }}</td>
-                        <td>{{ $item->kehadiran_format }}</td>
                         <td>{{ $item->izin }}</td>
                         <td>Rp {{ number_format($item->pinalti_izin, 0, ',', '.') }}</td>
-                        <td>{{ $item->keterlambatan }}</td>
                         <td>Rp {{ number_format($item->pinalti_keterlambatan, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($item->total_pinalti, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($item->gaji_akhir, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <p>Terlambat</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>Keterlambatan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($data as $item)
+                    <tr>
+                        <td>{{ $item->nomor }}</td>
+                        <td>{{ $item->nama }}</td>
+                        <td>{{ $item->keterlambatan_format }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <p>Tepat waktu</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>Kehadiran</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($data as $item)
+                    <tr>
+                        <td>{{ $item->nomor }}</td>
+                        <td>{{ $item->nama }}</td>
+                        <td>{{ $item->kehadiran_format }}</td>
                     </tr>
                 @endforeach
             </tbody>

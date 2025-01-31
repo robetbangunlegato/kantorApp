@@ -218,7 +218,7 @@ public function downloadPDF(Request $request)
         'users.name as nama',
         'jabatan_organisasis.nama_jabatan as jabatan',
         'jabatan_organisasis.besaran_gaji as gaji_pokok',
-        \DB::raw('COUNT(CASE WHEN absensis.status_absensi = "datang" THEN 1 END) as kehadiran'),
+        \DB::raw('COUNT(CASE WHEN absensis.status_absensi = "datang" AND TIME(absensis.created_at) <= pengaturan_absensis.check_in THEN 1 END) as kehadiran'),
         \DB::raw('COUNT(CASE WHEN absensis.status_absensi = "izin" THEN 1 END) as izin'),
         \DB::raw('SUM(CASE WHEN absensis.status_absensi = "datang" AND TIME(absensis.created_at) > pengaturan_absensis.check_in THEN 1 ELSE 0 END) as keterlambatan')
     )
@@ -226,12 +226,12 @@ public function downloadPDF(Request $request)
     ->groupBy('users.id', 'jabatan_organisasis.nama_jabatan', 'jabatan_organisasis.besaran_gaji')
     ->get();
 
-
     // Tambahkan data kalkulasi
     foreach ($data as $index => $item) {
         $item->nomor = $index + 1;
         $item->total_hari = $startDate->diffInDays($endDate) + 1;
         $item->kehadiran_format = "{$item->kehadiran}/{$item->total_hari}";
+        $item->keterlambatan_format = "{$item->keterlambatan}/{$item->total_hari}";
         $item->pinalti_izin = max(0, ($item->izin - 3) * 50000);
         $item->pinalti_keterlambatan = $item->keterlambatan * 25000;
         $item->total_pinalti = $item->pinalti_izin + $item->pinalti_keterlambatan;
